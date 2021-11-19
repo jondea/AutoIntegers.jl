@@ -1,0 +1,4 @@
+name = "AutoIntegers"
+uuid = "4f20255d-f93d-4ff3-b5bc-f87787cf34f7"
+authors = ["jondea <jondea@thedeakin.net>"]
+version = "0.1.0"
