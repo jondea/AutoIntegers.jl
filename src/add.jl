@@ -1,34 +1,4 @@
 
-function addcast(a, b, ::Type{T})::T where {T}
-    # By default, do the naive thing
-    a + b
-end
-function addcast(a::T, b::T, ::Type{RT})::RT where {T,RT}
-    # Covers the case where the return type is larger
-    RT(a) + RT(b)
-end
-function addcast(a::TA, b::TB, ::Type{RT})::RT where {TA<:Signed, TB<:Unsigned, RT<:Signed}
-    # Julia will automatically cast the Signed to Unsigned, force it to be the signed return type
-    if sizeof(RT) > sizeof(TB)
-        if sizeof(RT) >= sizeof(TA)
-            RT(a) + RT(b)
-        else
-            RT(TA(a) + TA(b))
-        end
-    elseif sizeof(RT) <= sizeof(TB)
-        if sizeof(TA) > sizeof(TB)
-            RT(TA(a) + TA(b))
-        else # Note: RT (Signed) is smaller or same size as than TB, so a must be negative
-            WT = signed(bigger_type(TB))
-            RT(WT(b) + WT(a))
-        end
-    end
-end
-function addcast(a::TA, b::TB, ::Type{RT})::RT where {TA<:Unsigned, TB<:Signed, RT<:Signed}
-    # Julia will automatically cast the Signed to Unsigned, force it to be the signed return type
-    RT(a) + RT(b)
-end
-
 import Base.+
 +(a::Integer, ::AutoInteger{0,0,T}) where T<:Integer = a
 +(::AutoInteger{0,0,<:Integer}, b::Integer) = b
@@ -38,12 +8,17 @@ function +(a::AutoInteger{LA,UA}, b::AutoInteger{LB,UB}) where {LA,UA,LB,UB}
     L = LA+LB
     U = UA+UB
     T = auto_integer_type(L,U)
-    AutoInteger{L,U}(addcast(a.val, b.val, T))
+    TW = bound_union_type((LA,UA), (LB,UB), (L,U))
+    AutoInteger{L,U}(T(TW(a.val) + TW(b.val)))
 end
 function +(a::AutoInteger{LA,UA}, b::Integer) where {LA,UA}
     L = LA+b
     U = UA+b
     T = auto_integer_type(L,U)
-    AutoInteger{L,U}(addcast(a.val, b, T))
+    # We assume b has the range of its type so that this function is type stable.
+    # To do this while retaining the tight bounds, the value of b would need to be known at compile time
+    # Or the user could just define AutoInteger{b,b}(b), maybe a macro for this?
+    TW = bound_union_type((LA,UA), (typemin(b),typemax(b)), (L,U))
+    AutoInteger{L,U}(T(TW(a.val) + TW(bl)))
 end
 +(a::Integer, b::AutoInteger) = b + a

@@ -13,11 +13,13 @@ function auto_integer_type(l,u)::DataType
     if l >= typemin(Int32)  && u <= typemax(Int32)  return Int32 end
     if l >= typemin(Int64)  && u <= typemax(Int64)  return Int64 end
     if l >= typemin(Int128) && u <= typemax(Int128) return Int128 end
-
+    
     # All else fails, stop here. We would use a BigInt as the type parameter but
     # it is not allowed
     throw(DomainError((l,u), "l and u must both be representable as Int128 or UInt128"))
 end
+
+auto_integer_type(bounds)::DataType = auto_integer_type(bounds[1],bounds[2])
 
 struct AutoInteger{L,U,T<:Integer} <: Integer
     val::T
@@ -61,6 +63,12 @@ import Base.==
 # but we would need to check there is definitely no runtime overhead for other cases
 ==(a::AutoInteger,b::AutoInteger) = a.val == b.val
 ==(a::AutoInteger,b::Number) = a.val == b
+
+bound_union(bound1, bound2) = (min(bound1[1], bound2[1]), max(bound1[2], bound2[2]))
+bound_union(bound1, bound2, bound3) = bound_union(bound1, bound_union(bound2, bound3))
+# bound_union((L1,U1), (L2,U2)) = (min(L1, L2), max(U1, U2))
+
+bound_union_type(bounds...) = auto_integer_type(bound_union(bounds...))
 
 bigger_type(::Type{UInt8}) = UInt16
 bigger_type(::Type{UInt16}) = UInt32
