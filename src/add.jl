@@ -26,25 +26,6 @@ function addcast(a::TA, b::TB, ::Type{RT})::RT where {TA<:Unsigned, TB<:Signed, 
     RT(a) + RT(b)
 end
 
-can_represent(T::DataType,L::Integer,U::Integer) = L >= typemin(T) && U <= typemax(T)
-can_represent(T::DataType,::AutoInteger{L,U}) where {L,U} = can_represent(T, L, U)
-
-import Base: +
-function +(a::AutoInteger{LA,UA,TA}, b::AutoInteger{LB,UB,TB}) where {LA,UA,TA,LB,UB,TB} 
-    LR = LA+LB
-    UR = UA+UB
-    TR = auto_integer_type(L,U)
-    if can_represent(TR, a)
-        if can_represent(TR, b)
-            return AutoInteger{LR,UR}(TR(a) + TR(b))
-        else
-            error("")
-        end
-    else
-        error("")
-    end
-end
-
 function +(a::AutoInteger{LA,UA}, b::AutoInteger{LB,UB}) where {LA,UA,LB,UB} 
     L = LA+LB
     U = UA+UB
