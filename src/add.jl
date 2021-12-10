@@ -13,18 +13,26 @@ function addcast(a::TA, b::TB, ::Type{RT})::RT where {TA<:Signed, TB<:Unsigned, 
         if sizeof(RT) >= sizeof(TA)
             RT(a) + RT(b)
         else
-            TA(a) + TA()
+            RT(TA(a) + TA(b))
         end
-    elseif sizeof(RT) < sizeof(TB)
-        RT(a) + RT(b)
-    else
-        RT(a + b)
+    elseif sizeof(RT) <= sizeof(TB)
+        if sizeof(TA) > sizeof(TB)
+            RT(TA(a) + TA(b))
+        else # Note: RT (Signed) is smaller or same size as than TB, so a must be negative
+            WT = signed(bigger_type(TB))
+            RT(WT(b) + WT(a))
+        end
     end
 end
 function addcast(a::TA, b::TB, ::Type{RT})::RT where {TA<:Unsigned, TB<:Signed, RT<:Signed}
     # Julia will automatically cast the Signed to Unsigned, force it to be the signed return type
     RT(a) + RT(b)
 end
+
+import Base.+
++(a::Integer, ::AutoInteger{0,0,T}) where T<:Integer = a
++(::AutoInteger{0,0,<:Integer}, b::Integer) = b
++(::AutoInteger{0,0,<:Integer}, ::AutoInteger{0,0,<:Integer}) = AutoInteger{0,0}(0)
 
 function +(a::AutoInteger{LA,UA}, b::AutoInteger{LB,UB}) where {LA,UA,LB,UB} 
     L = LA+LB

@@ -62,6 +62,17 @@ import Base.==
 ==(a::AutoInteger,b::AutoInteger) = a.val == b.val
 ==(a::AutoInteger,b::Number) = a.val == b
 
+bigger_type(::Type{UInt8}) = UInt16
+bigger_type(::Type{UInt16}) = UInt32
+bigger_type(::Type{UInt32}) = UInt64
+bigger_type(::Type{UInt64}) = UInt128
+bigger_type(::Type{UInt128}) = BigInt
+bigger_type(::Type{Int8}) = Int16
+bigger_type(::Type{Int16}) = Int32
+bigger_type(::Type{Int32}) = Int64
+bigger_type(::Type{Int64}) = Int128
+bigger_type(::Type{Int128}) = BigInt
+
 include("add.jl")
 include("subtract.jl")
 include("multiply.jl")
