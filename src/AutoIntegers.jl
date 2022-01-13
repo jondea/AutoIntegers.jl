@@ -25,9 +25,10 @@ struct AutoInteger{L,U,T<:Integer} <: Integer
     val::T
     function AutoInteger{L,U}(v) where {L,U}
         T = auto_integer_type(L,U)
-        # To make AutoIntegers no overhead, we probably need to remove this check
-        # Perhaps have no inner constructor, an unsafe outer constructor and a safe obviously named constructor?
-        if !(L <= v <= U) throw(DomainError(v, "v must be $L <= v <= $U")) end
+        # # To make AutoIntegers no overhead, we probably need to remove this check
+        # # Perhaps have no inner constructor, an unsafe outer constructor and a safe obviously named constructor?
+        # Can't get the above approach working, I have just commented the check out, although this isn't very user friendly...
+        # if !(L <= v <= U) throw(DomainError(v, "v must be $L <= v <= $U")) end
         new{L,U,T}(T(v))
     end
 end
@@ -36,7 +37,10 @@ import Base: show
 show(io::IO, a::AutoInteger{L,U}) where {L,U} = print(io, "AutoInteger{$L,$U}($(string(a.val,base=10)))")
 
 import Base: rand
-rand(::Type{AutoInteger{L,U,T}}) where {L,U,T} = AutoInteger{L,U}(rand(L:U))
+function rand(::Type{AutoInteger{L,U}}) where {L,U} 
+    T = auto_integer_type(L,U)
+    AutoInteger{L,U}(rand(T(L):T(U)))
+end
 
 import Base: tryparse
 function tryparse(::Type{AutoInteger{L,U}}, str::String) where {L,U}

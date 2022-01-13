@@ -1,13 +1,17 @@
-
-using AutoIntegers
-
-function normal_ints(a_str::UInt8, b_str::Int8)
+function normal_ints()
+    a = rand(Int8(-1):Int8(100))
+    b = rand(Int8(-10):Int8(5))
     return Int16(a) * Int16(b)
 end
+@code_typed normal_ints()
 
-function auto_ints(a_str::AutoInteger{1,100}, b_str::AutoInteger{-10,5})
-    return a * b
+import AutoIntegers: AutoInteger
+function auto_ints()
+    a = rand(AutoInteger{-1,100})
+    b = rand(AutoInteger{-10,5})
+    return (a * b).val
 end
+@code_typed auto_ints()
 
 println("Give me a number 1-100")
 a = parse(AutoInteger{1,100}, readline())
